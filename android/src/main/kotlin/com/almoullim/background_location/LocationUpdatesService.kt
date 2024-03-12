@@ -11,6 +11,7 @@ import android.content.IntentFilter
 import android.os.*
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
 import com.google.android.gms.location.LocationRequest
@@ -98,6 +99,7 @@ class LocationUpdatesService : Service() {
 
     private var mServiceHandler: Handler? = null
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         val googleAPIAvailability = GoogleApiAvailability.getInstance()
@@ -154,13 +156,7 @@ class LocationUpdatesService : Service() {
 
         val filter = IntentFilter()
         filter.addAction(STOP_SERVICE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(broadcastReceiver, filter, RECEIVER_NOT_EXPORTED)
-            } else {
-                registerReceiver(broadcastReceiver, filter)
-            }
-        }
+        registerReceiver(broadcastReceiver, filter, RECEIVER_EXPORTED)
 
         updateNotification() // to start the foreground service
     }

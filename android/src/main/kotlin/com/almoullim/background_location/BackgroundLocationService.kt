@@ -7,6 +7,7 @@ import io.flutter.plugin.common.BinaryMessenger
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.*
+import android.content.Context.RECEIVER_EXPORTED
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
@@ -81,7 +82,8 @@ class BackgroundLocationService: MethodChannel.MethodCallHandler, PluginRegistry
         receiver = MyReceiver()
 
         LocalBroadcastManager.getInstance(context).registerReceiver(receiver!!,
-                IntentFilter(LocationUpdatesService.ACTION_BROADCAST))
+                IntentFilter(LocationUpdatesService.ACTION_BROADCAST), RECEIVER_EXPORTED
+        )
     }
 
     fun onDetachedFromEngine() {
@@ -90,6 +92,7 @@ class BackgroundLocationService: MethodChannel.MethodCallHandler, PluginRegistry
         isAttached = false
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     fun setActivity(binding: ActivityPluginBinding?) {
         this.activity = binding?.activity
 
@@ -106,7 +109,8 @@ class BackgroundLocationService: MethodChannel.MethodCallHandler, PluginRegistry
 
     private fun startLocationService(distanceFilter: Double?, forceLocationManager : Boolean?): Int{
         LocalBroadcastManager.getInstance(context!!).registerReceiver(receiver!!,
-                IntentFilter(LocationUpdatesService.ACTION_BROADCAST))
+                IntentFilter(LocationUpdatesService.ACTION_BROADCAST), RECEIVER_EXPORTED
+        )
         if (!bound) {
             val intent = Intent(context, LocationUpdatesService::class.java)
             intent.putExtra("distance_filter", distanceFilter)

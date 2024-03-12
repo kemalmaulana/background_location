@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.*
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
@@ -97,6 +98,7 @@ class LocationUpdatesService : Service() {
 
     private var mServiceHandler: Handler? = null
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         val googleAPIAvailability = GoogleApiAvailability.getInstance()
             .isGooglePlayServicesAvailable(applicationContext)
@@ -142,6 +144,7 @@ class LocationUpdatesService : Service() {
         }
 
         broadcastReceiver = object : BroadcastReceiver() {
+            @RequiresApi(Build.VERSION_CODES.N)
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == "stop_service") {
                     removeLocationUpdates()
@@ -151,7 +154,13 @@ class LocationUpdatesService : Service() {
 
         val filter = IntentFilter()
         filter.addAction(STOP_SERVICE)
-        registerReceiver(broadcastReceiver, filter)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(broadcastReceiver, filter, RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(broadcastReceiver, filter)
+            }
+        }
 
         updateNotification() // to start the foreground service
     }
@@ -181,8 +190,9 @@ class LocationUpdatesService : Service() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     fun removeLocationUpdates() {
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
@@ -199,7 +209,7 @@ class LocationUpdatesService : Service() {
             } else {
                 mLocation = mLocationManager!!.getLastKnownLocation(LocationManager.GPS_PROVIDER)
             }
-        } catch (unlikely: SecurityException) {
+        } catch (_: SecurityException) {
         }
     }
 
